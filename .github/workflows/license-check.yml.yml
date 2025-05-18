@@ -1,0 +1,30 @@
+name: License Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  license-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Trivy
+        run: |
+          sudo apt-get update
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.1_Linux-64bit.deb
+          sudo dpkg -i trivy_0.50.1_Linux-64bit.deb
+
+      - name: Run Trivy license scan
+        run: |
+          trivy fs . \
+            --scanners license \
+            --license-policy ./license-policy.yaml \
+            --exit-code 1 \
+            --format table
