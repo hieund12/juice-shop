@@ -57,8 +57,7 @@ jobs:
       - name: Download YARA Rules
         run: |
           mkdir -p yara_rules
-          wget https://raw.githubusercontent.com/Yara-Rules/rules/master/malware/MALW_Agent.yar -O yara_rules/malware.yar || true
-
+          wget https://raw.githubusercontent.com/Yara-Rules/rules/master/index.yar -O yara_rules/index.yar || true
       - name: Run YARA Scan
         run: |
-          yara -r yara_rules/malware.yar . || true
+          yara -r yara_rules/index.yar . || true
