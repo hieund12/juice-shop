@@ -1,0 +1,32 @@
+name: Trivy Full Scan
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  scan:
+    name: Trivy Full Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: FS scan (source code + secrets)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+
+      - name: Config scan (Dockerfile, IaC)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+
