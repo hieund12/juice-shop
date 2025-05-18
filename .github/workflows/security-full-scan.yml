@@ -1,0 +1,59 @@
+name: Full Security Scan (Trivy + ClamAV + YARA)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  full-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      ####################################
+      # 1️⃣ Install Trivy and Scan Secret
+      ####################################
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Run Trivy Secret & Malware Scan
+        run: |
+          trivy fs . \
+            --scanners secret \
+            --exit-code 0 \
+            --format table
+
+      ####################################
+      # 2️⃣ Install and Run ClamAV
+      ####################################
+      - name: Install ClamAV
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clamav clamav-daemon
+          sudo freshclam
+
+      - name: Run ClamAV Scan
+        run: |
+          clamscan -r --infected --no-summary . || true
+
+      ####################################
+      # 3️⃣ Install and Run YARA
+      ####################################
+      - name: Install YARA
+        run: |
+          sudo apt-get install -y yara
+
+      - name: Download Basic YARA Rules
+        run: |
+          mkdir -p yara_rules
+          wget https://raw.githubusercontent.com/Yara-Rules/rules/master/malware/MALW_Agent.yar -O yara_rules/malware.yar || true
+
+      - name: Run YARA scan
+        run: |
+          yara -r yara_rules/malware.yar . || true
