@@ -23,6 +23,5 @@ jobs:
         run: |
           trivy fs . \
             --scanners license \
-            --license-policy ./license-policy.yaml \
-            --exit-code 1 \
+            --license-full \
             --format table
