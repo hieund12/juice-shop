@@ -15,45 +15,50 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      ####################################
-      # 1️⃣ Install Trivy and Scan Secret
-      ####################################
+      ##################################################
+      # 1️⃣ Trivy – Quét mã độc & bí mật trong source
+      ##################################################
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Run Trivy Secret & Malware Scan
+      - name: Run Trivy Secret Scan
         run: |
           trivy fs . \
             --scanners secret \
             --exit-code 0 \
             --format table
 
-      ####################################
-      # 2️⃣ Install and Run ClamAV
-      ####################################
+      ##################################################
+      # 2️⃣ ClamAV – Quét mã độc/virus/trojans
+      ##################################################
       - name: Install ClamAV
         run: |
           sudo apt-get update
           sudo apt-get install -y clamav clamav-daemon
+
+      - name: Update ClamAV DB (fix daemon conflict)
+        run: |
+          sudo systemctl stop clamav-freshclam || true
+          sudo systemctl stop clamav-daemon || true
           sudo freshclam
 
       - name: Run ClamAV Scan
         run: |
           clamscan -r --infected --no-summary . || true
 
-      ####################################
-      # 3️⃣ Install and Run YARA
-      ####################################
+      ##################################################
+      # 3️⃣ YARA – Phát hiện mẫu mã độc tiềm ẩn (pattern rules)
+      ##################################################
       - name: Install YARA
         run: |
           sudo apt-get install -y yara
 
-      - name: Download Basic YARA Rules
+      - name: Download YARA Rules
         run: |
           mkdir -p yara_rules
           wget https://raw.githubusercontent.com/Yara-Rules/rules/master/malware/MALW_Agent.yar -O yara_rules/malware.yar || true
 
-      - name: Run YARA scan
+      - name: Run YARA Scan
         run: |
           yara -r yara_rules/malware.yar . || true
