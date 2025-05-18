@@ -54,10 +54,9 @@ jobs:
         run: |
           sudo apt-get install -y yara
 
-      - name: Download YARA Rules
+      - name: Run YARA scan on all rules
         run: |
-          mkdir -p yara_rules
-          wget https://raw.githubusercontent.com/Yara-Rules/rules/master/index.yar -O yara_rules/index.yar || true
-      - name: Run YARA Scan
-        run: |
-          yara -r yara_rules/index.yar . || true
+          find yara_rules -type f \( -name "*.yar" -o -name "*.yara" \) | while read rule; do
+            echo "==> Scanning with: $rule"
+            yara -r "$rule" . || true
+          done
